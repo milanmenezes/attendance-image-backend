@@ -64,7 +64,7 @@ def process(image_name) :
     #return render_template("index.html",present=present,absent=absent)
 	
 @app.route('/update/<courseid>/<present>')
-def total(courseid,present):
+def update(courseid,present):
     con=mysql.connect()
     cur=con.cursor()
     cur.execute("update"+courseid+"set count=count+1 where usn in (present)")
