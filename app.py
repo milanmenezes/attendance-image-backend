@@ -68,6 +68,7 @@ def update(courseid,present):
     con=mysql.connect()
     cur=con.cursor()
     cur.execute("update"+courseid+"set count=count+1 where usn in (present)")
+    cur.execute("update courses set count=count+1 where cid='"+courseid+"'")
     cur.close()
     con.close()
     return 'OK'
