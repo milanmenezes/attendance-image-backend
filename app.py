@@ -1,6 +1,7 @@
 from flask import Flask
 import hashlib
 import json
+import boto3
 from flaskext.mysql import MySQL
 
 app = Flask(__name__)
@@ -17,6 +18,44 @@ mysql.init_app(app)
 @app.route('/')
 def hello_world():
     return 'Hello World!'
+
+@app.route("process/<image_name>")
+def process(image_name) :
+    d=image_name.split("_")
+    client = boto3.client('rekognition')
+    f=open("faces")
+    l=json.load(f)
+    f.close()
+    present=[]
+    absent=[]
+    response = client.index_faces(
+	    CollectionId=d[0],
+	    Image={
+	        'S3Object': {
+	            'Bucket': 'attendaceupload',
+	            'Name': image_name,
+	        }
+	    },
+	    ExternalImageId=image_name,
+	    DetectionAttributes=[
+	        'DEFAULT',
+	    ],
+	    MaxFaces=80,
+	    QualityFilter='NONE'
+	)
+    temp_image_ids=[]
+    for i in response["FaceRecords"]:
+	       temp_image_ids.append(i["Face"]["FaceId"])
+    for face in l:
+    	if(client.search_faces(CollectionId=d[0],FaceId=face["face-id"],MaxFaces=1)["FaceMatches"]):
+    		present.append(face['usn'])
+    	else:
+    		absent.append(face['usn'])
+
+    response=client.delete_faces(CollectionId=d[0],FaceIds=temp_image_ids)
+    dict={"Present":present,"Absent":absent}
+    return dict
+    #return render_template("index.html",present=present,absent=absent)
 
 @app.route('/attendance/<course_id>/<mac>/')
 def attendance(course_id,mac):
