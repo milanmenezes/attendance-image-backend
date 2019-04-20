@@ -62,6 +62,15 @@ def process(image_name) :
     dict={"Present":present,"Absent":absent}
     return dict
     #return render_template("index.html",present=present,absent=absent)
+	
+@app.route('/update/<courseid>/<present>')
+def total(courseid,present):
+    con=mysql.connect()
+    cur=con.cursor()
+    cur.execute("update"+courseid+"set count=count+1 where usn in (present)")
+    cur.close()
+    con.close()
+    return 'OK'
 
 @app.route('/attendance/<course_id>/<mac>/')
 def attendance(course_id,mac):
