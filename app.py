@@ -28,7 +28,7 @@ def process(image_name) :
     #.close()
     con=mysql.connect()
     cur=con.cursor()
-    cur.execute("select usn,faceid from stu_auth where usn in (select usn from"+d[0]+")")
+    cur.execute("select usn,faceid from stu_auth where usn in (select usn from "+d[0]+")")
     res=cur.fetchall()
     cur.close()
     con.close()
@@ -52,23 +52,25 @@ def process(image_name) :
     temp_image_ids=[]
     for i in response["FaceRecords"]:
 	       temp_image_ids.append(i["Face"]["FaceId"])
-    for face in res:
-    	if(client.search_faces(CollectionId=d[0],FaceId=face[1],MaxFaces=1)["FaceMatches"]):
-    		present.append(face[0])
-    	else:
-    		absent.append(face[0])
+    try:
+        for face in res:
+        	if(client.search_faces(CollectionId=d[0],FaceId=face[1],MaxFaces=1)["FaceMatches"]):
+        		present.append(face[0])
+        	else:
+        		absent.append(face[0])
+    finally:
+        response=client.delete_faces(CollectionId=d[0],FaceIds=temp_image_ids)
 
-    response=client.delete_faces(CollectionId=d[0],FaceIds=temp_image_ids)
-    dict={"Present":present,"Absent":absent}
-    return dict
-    #return render_template("index.html",present=present,absent=absent)
+    return json.dumps({"present":present,"absent":absent})
+
 	
 @app.route('/update/<courseid>/<present>')
 def update(courseid,present):
+    # present=json.loads(present)
     con=mysql.connect()
     cur=con.cursor()
-    cur.execute("update"+courseid+"set count=count+1 where usn in (present)")
-    cur.execute("update courses set count=count+1 where cid='"+courseid+"'")
+    cur.execute("update "+courseid+" set count=count+1 where usn in ("+present[1:-1:]+")")
+    cur.execute('update courses set count=count+1 where cid="'+courseid+'"')
     cur.close()
     con.close()
     return 'OK'
@@ -188,11 +190,5 @@ def courses():
     final = json.dumps(new)
     return final
 
-
-
-
-
-
-
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0')
+    app.run(debug=True,host='0.0.0.0')
