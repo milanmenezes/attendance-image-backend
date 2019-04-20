@@ -19,13 +19,19 @@ mysql.init_app(app)
 def hello_world():
     return 'Hello World!'
 
-@app.route("process/<image_name>")
+@app.route("/process/<image_name>")
 def process(image_name) :
     d=image_name.split("_")
     client = boto3.client('rekognition')
-    f=open("faces")
-    l=json.load(f)
-    f.close()
+    #f=open("faces")
+    #l=json.load(f)
+    #.close()
+    con=mysql.connect()
+    cur=con.cursor()
+    cur.execute("select usn,faceid from stu_auth where usn in (select usn from"+d[0]+")")
+    res=cur.fetchall()
+    cur.close()
+    con.close()
     present=[]
     absent=[]
     response = client.index_faces(
@@ -46,11 +52,11 @@ def process(image_name) :
     temp_image_ids=[]
     for i in response["FaceRecords"]:
 	       temp_image_ids.append(i["Face"]["FaceId"])
-    for face in l:
-    	if(client.search_faces(CollectionId=d[0],FaceId=face["face-id"],MaxFaces=1)["FaceMatches"]):
-    		present.append(face['usn'])
+    for face in res:
+    	if(client.search_faces(CollectionId=d[0],FaceId=face[1],MaxFaces=1)["FaceMatches"]):
+    		present.append(face[0])
     	else:
-    		absent.append(face['usn'])
+    		absent.append(face[0])
 
     response=client.delete_faces(CollectionId=d[0],FaceIds=temp_image_ids)
     dict={"Present":present,"Absent":absent}
