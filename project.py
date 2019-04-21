@@ -22,7 +22,7 @@ def hello_world():
 @app.route("/process/<image_name>")
 def process(image_name) :
     d=image_name.split("_")
-    client = boto3.client('rekognition')
+    client = boto3.client('rekognition',aws_access_key_id="AKIAIVCDOBME6US2GYTQ",aws_secret_access_key="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",region_name="ap-south-1")
     #f=open("faces")
     #l=json.load(f)
     #.close()
