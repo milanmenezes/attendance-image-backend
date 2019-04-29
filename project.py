@@ -23,9 +23,6 @@ def hello_world():
 def process(image_name) :
     d=image_name.split("_")
     client = boto3.client('rekognition',aws_access_key_id="AKIAIVCDOBME6US2GYTQ",aws_secret_access_key="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",region_name="ap-south-1")
-    #f=open("faces")
-    #l=json.load(f)
-    #.close()
     con=mysql.connect()
     cur=con.cursor()
     cur.execute("select usn,faceid from stu_auth where usn in (select usn from "+d[0]+")")
@@ -66,24 +63,14 @@ def process(image_name) :
 	
 @app.route('/update/<courseid>/<present>')
 def update(courseid,present):
-    # present=json.loads(present)
     con=mysql.connect()
     cur=con.cursor()
     cur.execute("update "+courseid+" set count=count+1 where usn in ("+present[1:-1:]+")")
     cur.execute('update courses set count=count+1 where cid="'+courseid+'"')
+    cur.execute('commit;')
     cur.close()
     con.close()
     return 'OK'
-
-@app.route('/attendance/<course_id>/<mac>/')
-def attendance(course_id,mac):
-    con = mysql.connect()
-    with con:
-        cur = con.cursor()
-        cur.execute("UPDATE "+course_id+" SET count=count+1 where usn=(select usn from stu_auth where mac= '"+mac+"')")
-    cur.close()
-    con.close()
-    return "OK"
 
 @app.route('/teacher-login/<id>/<password>/')
 def tlogin(id,password):
@@ -103,48 +90,6 @@ def tlogin(id,password):
         return "OK"
     else:
         return "wrong-password"
-
-@app.route('/total-count/<courseid>/')
-def total(courseid):
-    con=mysql.connect()
-    cur=con.cursor()
-    cur.execute("update courses set count=count+1 where cid='"+courseid+"';commit;")
-    cur.close()
-    con.close()
-    return 'OK'
-
-@app.route('/student-register/<usn>/<mac>/<password>/')
-def slogin(usn,mac,password):
-    password = hashlib.md5(password).hexdigest()
-    con = mysql.connect()
-    cur=con.cursor()
-    usn=usn.upper()
-    cur.execute("select count(*) from stu_details where usn='" + usn + "'")
-    res = cur.fetchall()
-    cur.close()
-    if res[0][0]==1:
-        try:
-
-            cur1 = con.cursor()
-            cur1.execute("insert into stu_auth values('"+usn+"', '"+password+"', '"+mac+"');commit;")
-            cur1.close()
-            cur=con.cursor()
-            cur.execute("select cid,cname from courses")
-            result = cur.fetchall()
-            cur.close()
-            for row in result:
-                cur=con.cursor()
-                cur.execute("insert into "+row[0]+" values('"+usn+"', "+"0);commit;")
-                cur.close()
-            con.close()
-            return 'OK'
-        except:
-            con.close()
-            return 'ALREADY_REGISTERED'
-
-    else :
-        con.close()
-        return 'INVALID_USER'
 
 @app.route('/teacher-courses/<tid>/')
 def tcourses(tid):
@@ -191,4 +136,4 @@ def courses():
     return final
 
 if __name__ == '__main__':
-    app.run(debug=True,host='0.0.0.0')
+    app.run(debug=True,host='0.0.0.0',port=8080)
