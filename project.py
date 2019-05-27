@@ -57,8 +57,9 @@ def process(image_name) :
         		absent.append(face[0])
     finally:
         response=client.delete_faces(CollectionId=d[0],FaceIds=temp_image_ids)
-
-    return json.dumps({"present":present,"absent":absent})
+    
+    intruder=len(temp_image_ids)-len(present)
+    return json.dumps({"present":present,"absent":absent, "intruder":intruder})
 
 	
 @app.route('/update/<courseid>/<present>')
