@@ -77,11 +77,9 @@ def update(courseid,present):
 def tlogin(id,password):
     con = mysql.connect()
     id=id.upper()
-    with con:
-        cur = con.cursor()
-        cur.execute("select password from lec_details where id='"+id+"'");
-        result=cur.fetchall()
-
+    cur = con.cursor()
+    cur.execute("select password from lec_details where id='"+id+"'");
+    result=cur.fetchall()
     cur.close()
     con.close()
     # password= hashlib.md5(password).hexdigest()
@@ -115,26 +113,26 @@ def tcourses(tid):
     return final
 
 
-@app.route('/courses/')
-def courses():
-    con = mysql.connect()
-    cur = con.cursor()
-    cur.execute("select cid,cname from courses")
-    result =cur.fetchall()
-    cur.close()
-    con.close()
+# @app.route('/courses/')
+# def courses():
+#     con = mysql.connect()
+#     cur = con.cursor()
+#     cur.execute("select cid,cname from courses")
+#     result =cur.fetchall()
+#     cur.close()
+#     con.close()
 
-    final = {}
-    i=1
-    for row in result:
-        fdata = {}
-        fdata['cid'] = row[0]
-        fdata['cname'] = row[1]
-        final['id'+str(i)]=fdata
-        i+=1
-    new={'len':len(final),'data':final}
-    final = json.dumps(new)
-    return final
+#     final = {}
+#     i=1
+#     for row in result:
+#         fdata = {}
+#         fdata['cid'] = row[0]
+#         fdata['cname'] = row[1]
+#         final['id'+str(i)]=fdata
+#         i+=1
+#     new={'len':len(final),'data':final}
+#     final = json.dumps(new)
+#     return final
 
 if __name__ == '__main__':
     app.run(debug=True,host='0.0.0.0',port=8080)
